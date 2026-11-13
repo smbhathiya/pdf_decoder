@@ -5,6 +5,7 @@
 mod decoder;
 mod opener;
 mod theme;
+mod update;
 mod wallet;
 
 use std::path::{Path, PathBuf};
@@ -12,6 +13,7 @@ use std::path::{Path, PathBuf};
 use eframe::egui::{self, Align2, FontId, Margin, RichText, Sense, Stroke, StrokeKind, Vec2};
 
 use theme::*;
+use update::UpdateUi;
 
 use crate::vault::Vault;
 
@@ -55,6 +57,7 @@ pub struct App {
     opener: opener::OpenerState,
     wallet: wallet::WalletState,
     decoder: decoder::DecoderState,
+    update: UpdateUi,
     status: Status,
 }
 
@@ -69,6 +72,7 @@ impl App {
             opener: Default::default(),
             wallet: Default::default(),
             decoder: Default::default(),
+            update: UpdateUi::new(&cc.egui_ctx),
             status: None,
         }
     }
@@ -156,12 +160,13 @@ impl App {
         ui.label(secondary(ui, desc));
         ui.add_space(12.0);
 
+        let busy = self.update.busy();
         egui::ScrollArea::vertical()
             .id_salt(name)
             .auto_shrink([false, false])
             .show(ui, |ui| {
                 ui.set_width(ui.available_width() - 12.0);
-                match page {
+                ui.add_enabled_ui(!busy, |ui| match page {
                     Page::Opener => match &self.vault {
                         Ok(v) => self.opener.ui(ui, v, &mut self.status),
                         Err(e) => vault_error(ui, e),
@@ -172,7 +177,7 @@ impl App {
                     },
                     Page::Decoder => self.decoder.ui(ui),
                     Page::Home => {}
-                }
+                });
                 ui.add_space(24.0);
             });
     }
@@ -313,6 +318,8 @@ pub(crate) fn pick_pdf(title: &str) -> Option<PathBuf> {
 impl eframe::App for App {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
+        self.update.poll();
+
         let dropped: Vec<PathBuf> = ctx.input(|i| {
             i.raw
                 .dropped_files
@@ -326,6 +333,17 @@ impl eframe::App for App {
         }
 
         let bg = Palette::current(ui).bg;
+        // Version + "Check for updates", pinned to the bottom of Home.
+        if self.page == Page::Home {
+            egui::Panel::bottom("home_footer")
+                .frame(egui::Frame::new().fill(bg).inner_margin(Margin {
+                    left: 40,
+                    right: 40,
+                    top: 6,
+                    bottom: 10,
+                }))
+                .show(ui, |ui| self.update.footer(ui));
+        }
         if self.page != Page::Home && self.status.is_some() {
             egui::Panel::bottom("infobar")
                 .frame(egui::Frame::new().fill(bg).inner_margin(Margin {
@@ -354,9 +372,13 @@ impl eframe::App for App {
                 page => self.tool_page(ui, page),
             });
 
-        // Esc returns to Home, unless the decoder is mid-search (it keeps running in a thread).
+        // The update pop-up sits above everything.
+        self.update.dialog(&ctx);
+
+        // Esc returns to Home, unless the decoder is mid-search or the update dialog is open.
         if self.page != Page::Home
             && !self.decoder.running()
+            && !self.update.dialog_open()
             && ctx.input(|i| i.key_pressed(egui::Key::Escape))
         {
             self.page = Page::Home;
