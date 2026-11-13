@@ -10,10 +10,14 @@ lopdf = "0.47"
 rayon = "1"
 rfd = "0.18"
 rusqlite = { version = "0.42", features = ["bundled"] }
-image = { version = "0.25", default-features = false, features = ["png"] }
+image = { version = "0.25", default-features = false, features = ["png", "ico"] }
+self_update = { version = "1.3.3", default-features = false, features = ["ureq", "rustls", "github", "archive-zip", "compression-zip-deflate"] }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_Security_Cryptography"] }
+
+[build-dependencies]
+winresource = "0.1.34"
 
 [profile.release]
 opt-level = 3
