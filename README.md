@@ -35,10 +35,25 @@ Windows 11 style as the sibling *Beez PDF Studio*.
 ## Build & run
 
 ```powershell
-cargo run            # debug
+cargo run                    # debug
 cargo build --release
-cargo test           # includes an end-to-end crack of a real AES-encrypted PDF
+cargo test                   # includes an end-to-end crack of a real AES-encrypted PDF
+cargo run --example make_icon   # regenerate assets/icon.ico + icon.png
 ```
+
+The Windows `.exe` gets the app icon and version info embedded by [build.rs](build.rs).
+
+## Releases, installer & self-update
+
+- Pushing a `vX.Y.Z` tag runs [.github/workflows/release.yml](.github/workflows/release.yml),
+  which builds 64/32-bit, packages portable zips, compiles the installer and publishes a GitHub
+  Release.
+- [installer/pdfdecoder.iss](installer/pdfdecoder.iss) is an Inno Setup script that installs
+  per-user into `%LOCALAPPDATA%\Programs\PDF Decoder` (no admin), with an optional "Open with"
+  entry for PDFs.
+- The app checks GitHub for a newer release on start-up and offers **Update now** (version +
+  "Check for updates" live in the Home footer). Update the `REPO_OWNER`/`REPO_NAME` constants in
+  [src/updater.rs](src/updater.rs) to point at your repository.
 
 ## Reality check
 
