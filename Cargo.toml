@@ -4,3 +4,17 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+anyhow = "1"
+eframe = { version = "0.37", features = ["glow", "wgpu"] }
+lopdf = "0.47"
+rayon = "1"
+rfd = "0.18"
+rusqlite = { version = "0.42", features = ["bundled"] }
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_Security_Cryptography"] }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
