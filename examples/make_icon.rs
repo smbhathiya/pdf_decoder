@@ -100,8 +100,9 @@ impl Canvas {
 fn draw() -> RgbaImage {
     let mut c = Canvas::new();
 
-    // 1. Tile: rounded square with a diagonal Windows-blue gradient.
-    let (top, bottom) = (hex(0x3AA0FF), hex(0x0052CC));
+    // 1. Tile: rounded square with a diagonal violet→indigo gradient (distinct from the
+    //    blue reference app, signalling "decode / unlock").
+    let (top, bottom) = (hex(0x8B5CF6), hex(0x4C1D95));
     c.paint(|x, y| {
         let d = sd_round_rect(x, y, 512.0, 512.0, 448.0, 448.0, 196.0);
         Some((cover(d), lerp(top, bottom, ((x + y) / 2048.0).clamp(0.0, 1.0))))
@@ -127,7 +128,7 @@ fn draw() -> RgbaImage {
     c.paint(|x, y| {
         let d = doc(x, y - 18.0);
         let a = 0.30 * (1.0 - (d / 40.0).clamp(0.0, 1.0));
-        Some((a, hex(0x002A6B)))
+        Some((a, hex(0x2A1065)))
     });
 
     // 3. Document page.
@@ -138,7 +139,7 @@ fn draw() -> RgbaImage {
         let a = (dr - fold) - x;
         let b = y - (dt + fold);
         let diag = ((x - (dr - fold)) - (y - dt)) / std::f32::consts::SQRT_2;
-        Some((cover(a.max(b).max(diag)), hex(0xBBD6F7)))
+        Some((cover(a.max(b).max(diag)), hex(0xDAD0F7)))
     });
 
     // 5. Text lines.
@@ -147,7 +148,7 @@ fn draw() -> RgbaImage {
         let (l, r) = (322.0, *right);
         c.paint(move |x, y| {
             let d = sd_round_rect(x, y, (l + r) / 2.0, cy, (r - l) / 2.0, 14.0, 14.0);
-            Some((cover(d), hex(0xA8C4E8)))
+            Some((cover(d), hex(0xC3B4EC)))
         });
     }
 

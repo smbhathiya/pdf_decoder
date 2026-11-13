@@ -66,7 +66,7 @@ impl App {
         install_fonts(&cc.egui_ctx);
         install_theme(&cc.egui_ctx);
         let vault = Vault::open().map_err(|e| format!("{e:#}"));
-        Self {
+        let mut app = Self {
             page: Page::Home,
             vault,
             opener: Default::default(),
@@ -74,7 +74,16 @@ impl App {
             decoder: Default::default(),
             update: UpdateUi::new(&cc.egui_ctx),
             status: None,
+        };
+        // A PDF passed on the command line (e.g. Windows "Open with…") opens the Open PDF tool.
+        if let Some(pdf) = std::env::args_os()
+            .skip(1)
+            .map(PathBuf::from)
+            .find(|p| p.extension().is_some_and(|e| e.eq_ignore_ascii_case("pdf")))
+        {
+            app.drop_pdf(pdf);
         }
+        app
     }
 
     /// Route a dropped PDF to the current tool (or open it on Home).

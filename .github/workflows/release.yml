@@ -1,0 +1,90 @@
+# Builds the Windows app and publishes a GitHub Release whenever a version tag is pushed:
+#
+#   git tag v0.1.0 && git push origin v0.1.0
+#
+# Release assets:
+#   * PDF-Decoder-Setup-vX.Y.Z.exe — the installer for new users.
+#   * PDF-Decoder-vX.Y.Z-x86_64-pc-windows-msvc.zip — the portable app. Its name contains the
+#     target triple and it holds `pdf_decorder.exe`, which is what the in-app updater
+#     (src/updater.rs) downloads. The installer's name must NOT contain the target triple.
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: i686-pc-windows-msvc
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Check tag matches Cargo.toml version
+        shell: pwsh
+        run: |
+          $version = (Select-String -Path Cargo.toml -Pattern '^version\s*=\s*"(.+)"' | Select-Object -First 1).Matches[0].Groups[1].Value
+          if ("v$version" -ne "${{ github.ref_name }}") {
+            throw "Tag ${{ github.ref_name }} does not match Cargo.toml version $version"
+          }
+          "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Test
+        run: cargo test --release
+
+      - name: Build 64-bit
+        run: cargo build --release
+
+      - name: Build 32-bit
+        run: cargo build --release --target i686-pc-windows-msvc
+
+      - name: Package portable zips
+        shell: pwsh
+        run: |
+          # The updater picks the zip whose name contains its own target triple.
+          $zip = "PDF-Decoder-${{ github.ref_name }}-x86_64-pc-windows-msvc.zip"
+          Compress-Archive -Path target/release/pdf_decorder.exe -DestinationPath $zip
+          "ZIP=$zip" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          $zip32 = "PDF-Decoder-${{ github.ref_name }}-i686-pc-windows-msvc.zip"
+          Compress-Archive -Path target/i686-pc-windows-msvc/release/pdf_decorder.exe -DestinationPath $zip32
+          "ZIP32=$zip32" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          choco install innosetup --no-progress -y
+          $iscc = @(
+            "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
+            "$env:ProgramFiles\Inno Setup 6\ISCC.exe"
+          ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $iscc) { throw "Inno Setup compiler not found" }
+          & $iscc "/DAppVersion=$env:VERSION" installer/pdfdecoder.iss
+          if ($LASTEXITCODE -ne 0) { throw "Installer build failed" }
+          "SETUP=dist/PDF-Decoder-Setup-v$env:VERSION.exe" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Publish release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $notes = @"
+          ## Download
+
+          - **New install:** download ``PDF-Decoder-Setup-v$env:VERSION.exe``, run it and follow the steps. No administrator rights are needed.
+          - **Portable:** download the ``.zip`` (``x86_64`` = 64-bit Windows, ``i686`` = 32-bit Windows), extract it and run ``pdf_decorder.exe``.
+          - **Already installed?** The app updates itself: open it and click **Update now**.
+
+          "@
+          gh release create "${{ github.ref_name }}" "$env:SETUP" "$env:ZIP" "$env:ZIP32" `
+            --title "PDF Decoder ${{ github.ref_name }}" `
+            --notes "$notes" `
+            --generate-notes
