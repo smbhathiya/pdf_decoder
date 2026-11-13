@@ -2,7 +2,7 @@
 //!
 //! Stored passwords are sealed with `CryptProtectData`, which derives a key from the current
 //! Windows user account. The ciphertext in the database is useless on another account or PC and
-//! cannot be read without logging in as this user — a real improvement over the reference app,
+//! cannot be read without logging in as this user - a real improvement over the reference app,
 //! which kept passwords in plain text. Off Windows (or if DPAPI ever fails) the bytes are stored
 //! as-is, so the app still works; the data directory is per-user either way.
 

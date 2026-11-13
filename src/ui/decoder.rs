@@ -180,14 +180,14 @@ impl DecoderState {
         // Fast paths that avoid brute forcing entirely.
         match engine::open_state(&path) {
             Ok(LockState::Plain) => {
-                self.log("This PDF opens without a password — nothing to brute force.");
+                self.log("This PDF opens without a password - nothing to brute force.");
                 return;
             }
             Ok(LockState::Owner) => {
                 let out = unlocked_path(&path);
                 match engine::strip_restrictions(&path, &out) {
                     Ok(()) => {
-                        self.log("[+] Owner-password only — the file opened freely.");
+                        self.log("[+] Owner-password only - the file opened freely.");
                         self.log(format!("[+] Restrictions removed → {}", out.display()));
                     }
                     Err(e) => self.log(format!("[!] {e:#}")),
@@ -229,7 +229,7 @@ impl DecoderState {
                     self.log(l.to_string());
                 }
             }
-            self.log("[*] Starting the CPU search anyway — press Stop to cancel.");
+            self.log("[*] Starting the CPU search anyway - press Stop to cancel.");
         }
 
         let label = if mask.is_empty() {

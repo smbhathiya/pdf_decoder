@@ -2,7 +2,7 @@
 //! read the encryption strength, and run a multi-core numeric brute force for a forgotten
 //! open-password. A Rust rewrite of the reference app's `core/engine.py`, using `lopdf` for the
 //! crypto and `rayon` for the search (load the file once, then test candidates in parallel with
-//! no re-parsing — much faster than opening the PDF per guess).
+//! no re-parsing - much faster than opening the PDF per guess).
 
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -20,9 +20,9 @@ use crate::progress::{Cancelled, Progress};
 pub enum LockState {
     /// Not encrypted at all.
     Plain,
-    /// Opens freely but restricts printing/editing (owner password only) — strippable instantly.
+    /// Opens freely but restricts printing/editing (owner password only) - strippable instantly.
     Owner,
-    /// Needs a password just to open — requires a brute force.
+    /// Needs a password just to open - requires a brute force.
     User,
 }
 
@@ -43,7 +43,8 @@ pub fn open_state(path: &Path) -> Result<LockState> {
 
 /// Save an unrestricted copy of an owner-password-only PDF (no cracking needed).
 pub fn strip_restrictions(path: &Path, out: &Path) -> Result<()> {
-    let mut doc = Document::load(path).with_context(|| format!("Could not read {}", path.display()))?;
+    let mut doc =
+        Document::load(path).with_context(|| format!("Could not read {}", path.display()))?;
     if doc.is_encrypted() {
         // Owner-only files are already decrypted by `load`; dropping the state saves them plain.
         doc.decrypt("").ok();
@@ -55,7 +56,7 @@ pub fn strip_restrictions(path: &Path, out: &Path) -> Result<()> {
 /// Decrypt `path` with `password` and save an unlocked copy to `out`.
 pub fn save_unlocked(path: &Path, password: &str, out: &Path) -> Result<()> {
     let mut doc = Document::load_with_password(path, password)
-        .map_err(|e| anyhow!("Could not open {} — wrong password? ({e})", path.display()))?;
+        .map_err(|e| anyhow!("Could not open {} - wrong password? ({e})", path.display()))?;
     if doc.is_encrypted() {
         doc.decrypt(password)
             .map_err(|e| anyhow!("Wrong password ({e})"))?;
@@ -111,9 +112,9 @@ pub fn analyze_encryption(path: &Path) -> Result<Encryption> {
     let label = if revision < 0 {
         "unknown / not standard-encrypted".to_string()
     } else if strong {
-        format!("AES-256 (R{revision}) — GPU-resistant, slow to crack")
+        format!("AES-256 (R{revision}) - GPU-resistant, slow to crack")
     } else {
-        format!("RC4/AES-128 (R{revision}) — fast to crack on a GPU")
+        format!("RC4/AES-128 (R{revision}) - fast to crack on a GPU")
     };
     Ok(Encryption {
         revision,
@@ -127,8 +128,13 @@ pub fn analyze_encryption(path: &Path) -> Result<Encryption> {
 /// A ready-to-run hashcat command for a numeric brute force of this PDF.
 pub fn hashcat_command(path: &Path, mode: Option<u32>, min_len: u32, max_len: u32) -> String {
     let name = path.file_stem().and_then(|s| s.to_str()).unwrap_or("file");
-    let file = path.file_name().and_then(|s| s.to_str()).unwrap_or("file.pdf");
-    let mode_str = mode.map(|m| m.to_string()).unwrap_or_else(|| "<mode>".into());
+    let file = path
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or("file.pdf");
+    let mode_str = mode
+        .map(|m| m.to_string())
+        .unwrap_or_else(|| "<mode>".into());
     let mask = "?d".repeat(max_len as usize);
     format!(
         "# 1) Extract the hash (needs John the Ripper's pdf2john):\n\
@@ -151,8 +157,14 @@ pub fn keyspace(min_len: u32, max_len: u32, mask: &str) -> u128 {
 
 /// A validated search space: either a digit-length range or a fixed mask like `077???????`.
 enum Space {
-    Range { min: u32, max: u32 },
-    Mask { template: Vec<u8>, slots: Vec<usize> },
+    Range {
+        min: u32,
+        max: u32,
+    },
+    Mask {
+        template: Vec<u8>,
+        slots: Vec<usize>,
+    },
 }
 
 impl Space {
@@ -173,7 +185,10 @@ impl Space {
             if min_len < 1 || max_len < min_len || max_len > 18 {
                 bail!("Need 1 ≤ min ≤ max ≤ 18 digits.");
             }
-            Ok(Space::Range { min: min_len, max: max_len })
+            Ok(Space::Range {
+                min: min_len,
+                max: max_len,
+            })
         }
     }
 }
@@ -271,9 +286,17 @@ pub fn run_search(
             });
 
             tried += (end - base) as u128;
-            let frac = if ks == 0 { 1.0 } else { tried as f32 / ks as f32 };
+            let frac = if ks == 0 {
+                1.0
+            } else {
+                tried as f32 / ks as f32
+            };
             let elapsed = start.elapsed().as_secs_f64();
-            let rate = if elapsed > 0.0 { tried as f64 / elapsed } else { 0.0 };
+            let rate = if elapsed > 0.0 {
+                tried as f64 / elapsed
+            } else {
+                0.0
+            };
             let eta = if rate > 0.0 {
                 (ks.saturating_sub(tried)) as f64 / rate
             } else {
@@ -384,7 +407,7 @@ mod tests {
 
     use lopdf::encryption::crypt_filters::{Aes128CryptFilter, CryptFilter};
     use lopdf::{
-        EncryptionState, EncryptionVersion, Object, Permissions, StringFormat, Stream, dictionary,
+        EncryptionState, EncryptionVersion, Object, Permissions, Stream, StringFormat, dictionary,
     };
 
     /// Write a one-page PDF to `path`, encrypted so `user_pw` is needed to open it.

@@ -2,7 +2,7 @@
 //!
 //! Writes `assets/icon.ico` (16–256 px, embedded in the .exe and used by the installer) and
 //! `assets/icon.png` (256 px, used as the window icon). A white PDF page on a Windows-blue tile
-//! with a golden keyhole badge — "unlock / decode a PDF". Drawn with signed-distance functions
+//! with a golden keyhole badge - "unlock / decode a PDF". Drawn with signed-distance functions
 //! on a 1024 px canvas (anti-aliased), then downsampled for each icon size.
 
 use std::path::Path;

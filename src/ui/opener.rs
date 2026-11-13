@@ -47,7 +47,10 @@ impl OpenerState {
             .to_string();
         self.add = Some(AddFlow {
             path,
-            password: matched.as_ref().map(|m| m.password.clone()).unwrap_or_default(),
+            password: matched
+                .as_ref()
+                .map(|m| m.password.clone())
+                .unwrap_or_default(),
             show: false,
             save_to_wallet: true,
             label,
@@ -106,7 +109,11 @@ impl OpenerState {
             card(ui, |ui| {
                 ui.vertical_centered(|ui| {
                     ui.add_space(24.0);
-                    ui.label(RichText::new(I_DOCUMENT).size(28.0).color(Palette::current(ui).text2));
+                    ui.label(
+                        RichText::new(I_DOCUMENT)
+                            .size(28.0)
+                            .color(Palette::current(ui).text2),
+                    );
                     ui.label(strong("No PDFs saved yet"));
                     caption(ui, "Click “Add PDF” to save one, then open it in a click.");
                     ui.add_space(24.0);
@@ -148,7 +155,11 @@ impl OpenerState {
                         ui.end_row();
                     }
                     if let Some(id) = clicked {
-                        self.selected = if self.selected == Some(id) { None } else { Some(id) };
+                        self.selected = if self.selected == Some(id) {
+                            None
+                        } else {
+                            Some(id)
+                        };
                     }
                 });
         });
@@ -165,7 +176,10 @@ impl OpenerState {
                 add.path.file_name().and_then(|s| s.to_str()).unwrap_or("")
             )));
             if add.matched {
-                caption(ui, "A saved wallet password opens this file — just confirm.");
+                caption(
+                    ui,
+                    "A saved wallet password opens this file - just confirm.",
+                );
             } else {
                 caption(ui, "Enter the password that opens this PDF.");
             }
@@ -188,7 +202,10 @@ impl OpenerState {
                     ui.add(egui::TextEdit::singleline(&mut add.label).desired_width(240.0));
                     ui.end_row();
                 });
-            ui.checkbox(&mut add.save_to_wallet, "Also save this password to the wallet");
+            ui.checkbox(
+                &mut add.save_to_wallet,
+                "Also save this password to the wallet",
+            );
             if let Some(err) = &add.error {
                 ui.colored_label(Palette::current(ui).error, err);
             }
@@ -278,7 +295,9 @@ impl OpenerState {
 fn short_path(path: &str) -> String {
     let p = Path::new(path);
     match (p.parent().and_then(|d| d.file_name()), p.file_name()) {
-        (Some(dir), Some(file)) => format!("…\\{}\\{}", dir.to_string_lossy(), file.to_string_lossy()),
+        (Some(dir), Some(file)) => {
+            format!("…\\{}\\{}", dir.to_string_lossy(), file.to_string_lossy())
+        }
         (None, Some(file)) => file.to_string_lossy().into_owned(),
         _ => path.to_string(),
     }

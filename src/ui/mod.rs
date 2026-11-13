@@ -1,5 +1,5 @@
-//! Application shell: a Home launcher with three tools — Open PDF, Passwords (wallet) and
-//! Decode — each opening a full-window page with a back button, in the Fluent / Windows 11 look
+//! Application shell: a Home launcher with three tools - Open PDF, Passwords (wallet) and
+//! Decode - each opening a full-window page with a back button, in the Fluent / Windows 11 look
 //! borrowed from the sibling "Beez PDF Studio" app.
 
 mod decoder;

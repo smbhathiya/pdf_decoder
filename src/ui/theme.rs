@@ -2,7 +2,7 @@
 //! surfaces, 4px control / 8px card corners, accent-coloured primary buttons.
 //!
 //! Shared verbatim with the sibling app; a few icon constants and layout helpers go unused
-//! here, which is fine — keeping the module intact makes it easy to sync.
+//! here, which is fine - keeping the module intact makes it easy to sync.
 #![allow(dead_code)]
 
 use eframe::egui::{

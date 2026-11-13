@@ -3,8 +3,8 @@
 #   git tag v0.1.0 && git push origin v0.1.0
 #
 # Release assets:
-#   * PDF-Decoder-Setup-vX.Y.Z.exe — the installer for new users.
-#   * PDF-Decoder-vX.Y.Z-x86_64-pc-windows-msvc.zip — the portable app. Its name contains the
+#   * PDF-Decoder-Setup-vX.Y.Z.exe - the installer for new users.
+#   * PDF-Decoder-vX.Y.Z-x86_64-pc-windows-msvc.zip - the portable app. Its name contains the
 #     target triple and it holds `pdf_decorder.exe`, which is what the in-app updater
 #     (src/updater.rs) downloads. The installer's name must NOT contain the target triple.
 
