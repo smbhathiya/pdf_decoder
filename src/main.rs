@@ -12,8 +12,9 @@ mod vault;
 
 const APP_TITLE: &str = "PDF Decoder";
 
-fn options() -> eframe::NativeOptions {
+fn options(renderer: eframe::Renderer) -> eframe::NativeOptions {
     eframe::NativeOptions {
+        renderer,
         viewport: egui::ViewportBuilder::default()
             .with_title(APP_TITLE)
             .with_inner_size([1040.0, 720.0])
@@ -26,12 +27,10 @@ fn options() -> eframe::NativeOptions {
 /// Open the window with one graphics backend. A panic inside the backend counts as a failure.
 fn run(renderer: eframe::Renderer, name: &'static str) -> Result<(), String> {
     startup::log(&format!("starting with {name}"));
-    let mut opts = options();
-    opts.renderer = renderer;
     let result = std::panic::catch_unwind(|| {
         eframe::run_native(
             APP_TITLE,
-            opts,
+            options(renderer),
             Box::new(move |cc| {
                 startup::log(&format!("{name} is working"));
                 if name == "DirectX/Vulkan" {
