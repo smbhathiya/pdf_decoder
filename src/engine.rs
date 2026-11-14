@@ -76,17 +76,10 @@ pub fn verify_password(path: &Path, password: &str) -> bool {
     Document::load_with_password(path, password).is_ok()
 }
 
-/// Whether the PDF needs a password just to open.
-pub fn needs_password(path: &Path) -> bool {
-    !verify_password(path, "")
-}
-
 // --- Encryption analysis -----------------------------------------------------------------
 
 #[derive(Clone, Debug)]
 pub struct Encryption {
-    pub revision: i64,
-    pub version: i64,
     /// AES-256 (R5/R6): GPU-resistant, slow even on hardware.
     pub strong: bool,
     pub hashcat_mode: Option<u32>,
@@ -101,7 +94,6 @@ pub fn analyze_encryption(path: &Path) -> Result<Encryption> {
         .get_encrypted()
         .map_err(|_| anyhow!("This PDF is not encrypted"))?;
     let revision = enc.get(b"R").and_then(|o| o.as_i64()).unwrap_or(-1);
-    let version = enc.get(b"V").and_then(|o| o.as_i64()).unwrap_or(-1);
     let strong = revision >= 5;
     let hashcat_mode = match revision {
         2 => Some(10400),
@@ -117,8 +109,6 @@ pub fn analyze_encryption(path: &Path) -> Result<Encryption> {
         format!("RC4/AES-128 (R{revision}) - fast to crack on a GPU")
     };
     Ok(Encryption {
-        revision,
-        version,
         strong,
         hashcat_mode,
         label,
@@ -463,7 +453,7 @@ mod tests {
         assert_eq!(open_state(&pdf).unwrap(), LockState::User);
         assert!(verify_password(&pdf, "0042"));
         assert!(!verify_password(&pdf, "0043"));
-        assert!(needs_password(&pdf));
+        assert!(!verify_password(&pdf, "")); // needs a password just to open
 
         let found = run_search(&pdf, 1, 4, "", &Progress::default()).unwrap();
         match found {

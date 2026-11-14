@@ -48,6 +48,7 @@ impl Progress {
     }
 
     /// Report progress through `n` equal steps inside the range `from..to`.
+    #[allow(dead_code)] // part of the shared Progress API; not every front-end uses it
     pub fn step(&self, from: f32, to: f32, i: usize, n: usize, stage: impl Into<String>) {
         let t = if n == 0 { 1.0 } else { i as f32 / n as f32 };
         self.set(from + (to - from) * t, stage);
